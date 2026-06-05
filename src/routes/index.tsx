@@ -22,13 +22,6 @@ function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="max-w-xl w-full text-center flex flex-col items-center gap-6">
-        <div className="flex flex-wrap justify-center gap-2">
-          <span className="sticker">朋友视角</span>
-          <span className="sticker" style={{ background: "var(--accent)" }}>
-            隐藏角色
-          </span>
-          <span className="sticker">可爱毒舌</span>
-        </div>
 
         <h1 className="text-4xl sm:text-5xl font-black leading-tight">
           你自以为的你，
