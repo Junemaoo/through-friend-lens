@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ResultRouteImport } from './routes/result'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as CompareRouteImport } from './routes/compare'
@@ -17,6 +18,11 @@ import { Route as ReviewIndexRouteImport } from './routes/review.index'
 import { Route as ReviewQuizRouteImport } from './routes/review.quiz'
 import { Route as ReviewDoneRouteImport } from './routes/review.done'
 
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultRoute = ResultRouteImport.update({
   id: '/result',
   path: '/result',
@@ -38,9 +44,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewIndexRoute = ReviewIndexRouteImport.update({
-  id: '/review/',
-  path: '/review/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ReviewRoute,
 } as any)
 const ReviewQuizRoute = ReviewQuizRouteImport.update({
   id: '/quiz',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/quiz': typeof QuizRoute
   '/result': typeof ResultRoute
+  '/review': typeof ReviewRouteWithChildren
   '/review/done': typeof ReviewDoneRoute
   '/review/quiz': typeof ReviewQuizRoute
   '/review/': typeof ReviewIndexRoute
@@ -77,6 +84,7 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/quiz': typeof QuizRoute
   '/result': typeof ResultRoute
+  '/review': typeof ReviewRouteWithChildren
   '/review/done': typeof ReviewDoneRoute
   '/review/quiz': typeof ReviewQuizRoute
   '/review/': typeof ReviewIndexRoute
@@ -88,6 +96,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/quiz'
     | '/result'
+    | '/review'
     | '/review/done'
     | '/review/quiz'
     | '/review/'
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/compare'
     | '/quiz'
     | '/result'
+    | '/review'
     | '/review/done'
     | '/review/quiz'
     | '/review/'
@@ -116,11 +126,18 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   QuizRoute: typeof QuizRoute
   ResultRoute: typeof ResultRoute
-  ReviewIndexRoute: typeof ReviewIndexRoute
+  ReviewRoute: typeof ReviewRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/result': {
       id: '/result'
       path: '/result'
@@ -151,10 +168,10 @@ declare module '@tanstack/react-router' {
     }
     '/review/': {
       id: '/review/'
-      path: '/review'
+      path: '/'
       fullPath: '/review/'
       preLoaderRoute: typeof ReviewIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ReviewRoute
     }
     '/review/quiz': {
       id: '/review/quiz'
@@ -173,12 +190,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ReviewRouteChildren {
+  ReviewDoneRoute: typeof ReviewDoneRoute
+  ReviewQuizRoute: typeof ReviewQuizRoute
+  ReviewIndexRoute: typeof ReviewIndexRoute
+}
+
+const ReviewRouteChildren: ReviewRouteChildren = {
+  ReviewDoneRoute: ReviewDoneRoute,
+  ReviewQuizRoute: ReviewQuizRoute,
+  ReviewIndexRoute: ReviewIndexRoute,
+}
+
+const ReviewRouteWithChildren =
+  ReviewRoute._addFileChildren(ReviewRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
   QuizRoute: QuizRoute,
   ResultRoute: ResultRoute,
-  ReviewIndexRoute: ReviewIndexRoute,
+  ReviewRoute: ReviewRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
