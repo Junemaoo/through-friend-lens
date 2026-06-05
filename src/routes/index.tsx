@@ -1,29 +1,62 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "你自以为的你，和朋友眼中的你一样吗？" },
+      {
+        name: "description",
+        content: "测测你在人际关系里的隐藏角色。先自测，再发给朋友评价，看看你以为的自己和朋友眼中的你是不是同一个版本。",
+      },
+      { property: "og:title", content: "你自以为的你，和朋友眼中的你一样吗？" },
+      {
+        property: "og:description",
+        content: "测测你在人际关系里的隐藏角色。",
+      },
     ],
   }),
-  component: Index,
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Home() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      <div className="max-w-xl w-full text-center flex flex-col items-center gap-6">
+        <div className="flex flex-wrap justify-center gap-2">
+          <span className="sticker">朋友视角</span>
+          <span className="sticker" style={{ background: "var(--accent)" }}>
+            隐藏角色
+          </span>
+          <span className="sticker">可爱毒舌</span>
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl font-black leading-tight">
+          你自以为的你，
+          <br />
+          和朋友眼中的你
+          <span className="inline-block px-2 bg-primary text-primary-foreground rounded-lg -rotate-2 mx-1">
+            一样
+          </span>
+          吗？
+        </h1>
+
+        <p className="text-lg text-foreground/80 font-medium">
+          测测你在人际关系里的隐藏角色。
+        </p>
+
+        <p className="text-foreground/70 max-w-md">
+          先自测，再发给一个朋友评价。看看你以为的自己，和朋友眼中的你是不是同一个版本。
+        </p>
+
+        <Link to="/quiz" className="btn-pop text-lg">
+          开始自测 →
+        </Link>
+
+        <p className="text-xs text-muted-foreground mt-4 max-w-sm">
+          不是严肃心理诊断，只是一次朋友视角里的小小对照。
+          灵感来自「乔哈里窗」：我们对自己的理解，和别人眼中的我们，常常并不完全重合。
+        </p>
+      </div>
+    </main>
   );
 }
