@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -28,7 +28,6 @@ export const Route = createFileRoute("/result")({
 
 function ResultPage() {
   const { testId, reviewId } = Route.useSearch();
-  const navigate = useNavigate();
   const fetchTest = useServerFn(getTest);
   const [shareUrl, setShareUrl] = useState("");
 
@@ -75,7 +74,7 @@ function ResultPage() {
         testId={testId}
         selfRoleId={selfRoleId}
         review={data.selectedReview}
-        onInviteMore={() => navigate({ to: "/result", search: { testId } })}
+        onInviteMore={() => undefined}
       />
     );
   }
@@ -102,13 +101,8 @@ function ResultPage() {
           <p className="text-sm text-accent-foreground/80">
             把链接发给一个朋友，看看 TA 眼里的你是不是同一个版本。
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <Link to="/review" search={{ testId }} className="btn-pop btn-ghost justify-center">
-              邀请朋友评价我
-            </Link>
-            <div className="flex-1">
-              <ShareLinkBox url={shareUrl} />
-            </div>
+          <div>
+            <ShareLinkBox url={shareUrl} />
           </div>
         </div>
 
