@@ -76,7 +76,7 @@ export const SELF_QUESTIONS: Question[] = [
   },
   {
     id: "Q2",
-    prompt: "你最常用什么方式表达"我在乎你"？",
+    prompt: "你最常用什么方式表达「我在乎你」？",
     options: [
       {
         key: "A",
@@ -327,7 +327,7 @@ export const FRIEND_QUESTIONS: Question[] = [
   },
   {
     id: "FQ5",
-    prompt: "如果用一句话"朋友认证"TA，你会选？",
+    prompt: "如果用一句话「朋友认证」TA，你会选？",
     options: [
       {
         key: "A",
