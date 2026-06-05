@@ -14,7 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      friend_reviews: {
+        Row: {
+          friend_name: string | null
+          friend_result: string
+          friend_scores: Json
+          id: string
+          submitted_at: string
+          test_id: string
+        }
+        Insert: {
+          friend_name?: string | null
+          friend_result: string
+          friend_scores: Json
+          id?: string
+          submitted_at?: string
+          test_id: string
+        }
+        Update: {
+          friend_name?: string | null
+          friend_result?: string
+          friend_scores?: Json
+          id?: string
+          submitted_at?: string
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_reviews_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          created_at: string
+          id: string
+          self_result: string
+          self_scores: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          self_result: string
+          self_scores: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          self_result?: string
+          self_scores?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
