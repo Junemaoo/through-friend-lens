@@ -6,12 +6,12 @@ export const Route = createFileRoute("/")({
       { title: "你自以为的你，和朋友眼中的你一样吗？" },
       {
         name: "description",
-        content: "测测你在人际关系里的隐藏角色。先自测，再发给朋友评价，看看你以为的自己和朋友眼中的你是不是同一个版本。",
+        content: "测测你在人际关系里的隐藏角色。先完成自测，再发给朋友测，看看是否一样吧。",
       },
       { property: "og:title", content: "你自以为的你，和朋友眼中的你一样吗？" },
       {
         property: "og:description",
-        content: "测测你在人际关系里的隐藏角色。",
+        content: "测测你在人际关系里的隐藏角色",
       },
     ],
   }),
