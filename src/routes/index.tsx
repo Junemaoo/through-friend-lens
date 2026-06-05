@@ -6,12 +6,12 @@ export const Route = createFileRoute("/")({
       { title: "你自以为的你，和朋友眼中的你一样吗？" },
       {
         name: "description",
-        content: "测测你在人际关系里的隐藏角色。先自测，再发给朋友评价，看看你以为的自己和朋友眼中的你是不是同一个版本。",
+        content: "测测你在人际关系里的隐藏角色。先完成自测，再发给朋友测，看看是否一样吧。",
       },
       { property: "og:title", content: "你自以为的你，和朋友眼中的你一样吗？" },
       {
         property: "og:description",
-        content: "测测你在人际关系里的隐藏角色。",
+        content: "测测你在人际关系里的隐藏角色",
       },
     ],
   }),
@@ -41,11 +41,11 @@ function Home() {
         </h1>
 
         <p className="text-lg text-foreground/80 font-medium">
-          测测你在人际关系里的隐藏角色。
+          测测你在人际关系里的隐藏角色
         </p>
 
         <p className="text-foreground/70 max-w-md">
-          先自测，再发给一个朋友评价。看看你以为的自己，和朋友眼中的你是不是同一个版本。
+          先完成自测，再发给朋友测，看看是否一样吧
         </p>
 
         <Link to="/quiz" className="btn-pop text-lg">
@@ -53,8 +53,9 @@ function Home() {
         </Link>
 
         <p className="text-xs text-muted-foreground mt-4 max-w-sm">
-          不是严肃心理诊断，只是一次朋友视角里的小小对照。
           灵感来自「乔哈里窗」：我们对自己的理解，和别人眼中的我们，常常并不完全重合。
+          <br />
+          娱乐测试，结果仅供参考
         </p>
       </div>
     </main>
