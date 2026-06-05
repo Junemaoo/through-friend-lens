@@ -1,87 +1,84 @@
+## 目标
+把当前“只显示最后一位朋友评价”的结果流，改成“一个自测结果对应多个朋友评价、每条评价可单独查看对照”；同时把你提供的 8 张角色形象接入结果相关页面与朋友评价列表。
 
-# 你自以为的你，和朋友眼中的你一样吗？
+## 我会实现的内容
 
-A lightweight social comparison test: user self-tests, shares a link, friend reviews, then compares "self-perception vs friend's view" across 8 hidden roles.
+### 1. 数据与读取逻辑改造
+- 保留现有 `testId` 作为一次自测的主键。
+- 每位朋友提交评价后，使用数据库里已有的独立评价记录 `id` 作为 `reviewId`。
+- 修改服务端读取函数：
+  - 不再只返回“最新一条朋友评价”。
+  - 返回该 `testId` 下的全部 `friendReviews` 列表。
+  - 支持按 `reviewId` 精确取单条朋友评价，用于单独对照页。
+- 修改朋友提交函数：
+  - 提交成功后返回新生成的 `reviewId`，方便朋友端立即跳转到自己的对照结果。
 
-## Scope (MVP)
+### 2. 路由与页面逻辑调整
+#### `/result?testId=...`
+改成“用户自己的结果主页”：
+- 始终展示自测角色信息。
+- 无朋友评价时：显示邀请入口、复制链接按钮、说明文案。
+- 有朋友评价时：
+  - 显示“朋友视角已送达”与已收到数量。
+  - 展示朋友评价卡片列表。
+  - 每张卡片含：朋友昵称/匿名文案、朋友眼中的角色、是否一致的简短提示、查看对照按钮。
 
-Full interaction logic + complete UI scaffold (white / orange / mint sticker style). Cartoon role illustrations will be added later by the user.
+#### `/result?testId=...&reviewId=...`
+新增为“单个朋友对照结果页”：
+- 展示该条朋友评价与自测结果的单独对照。
+- 一致时显示“朋友官方认证成功”。
+- 不一致时显示“隐藏角色解锁”。
+- 底部按钮：
+  - 返回朋友视角列表
+  - 邀请更多朋友评价我
 
-## Pages & Routes
+#### `/compare?testId=...&reviewId=...`
+保留为兼容别名：
+- 自动复用同一套单条对照逻辑，避免旧链接失效。
 
-```
-/                       Home (intro + 开始自测 CTA)
-/quiz                   Self-test (5 questions, progress bar)
-/result?testId=xxx      Self-test result + share link + view comparison
-/review?testId=xxx      Friend review intro (optional nickname)
-/review/quiz?testId=xxx Friend 5-question quiz
-/review/done?testId=xxx Friend submission confirmation
-/compare?testId=xxx     Self vs friend comparison (consensus or hidden role)
-```
+#### `/review/done`
+改成朋友端提交完成后的“即时对照页”：
+- 直接展示“你眼中的 TA 已送达”。
+- 显示：朋友眼中的角色 + TA 自测角色。
+- 一致/不一致分别显示对应文案。
+- 仅保留一个按钮：`我也想自测一下`。
+- 删除原先所有“复制给另一个朋友 / 邀请更多朋友”的朋友端按钮。
 
-All routes use TanStack Start file-based routing with proper `head()` metadata.
+### 3. 角色形象接入
+- 将你提供的 8 张图做成项目可引用的静态资源。
+- 在结果相关页面接入对应角色形象：
+  - 用户自测结果展示区
+  - 单个朋友对照页
+  - 朋友端完成页
+  - 朋友评价列表卡片
+- 每个角色根据 `RoleId` 映射到对应图片，不改现有角色名称与文字设定。
 
-## Data Layer
+### 4. 组件层调整
+- 扩展 `RoleCard`，支持显示角色插图。
+- 新增一个朋友评价列表卡片组件，负责：
+  - 昵称/匿名显示
+  - 朋友眼中角色
+  - 一致/不一致提示
+  - 查看对照入口
+- 把对照页文案逻辑整理成统一函数，避免结果页、朋友端完成页、兼容页各写一套。
 
-Enable **Lovable Cloud** for persistence (test results need to survive across devices: user takes test on phone, friend opens link on theirs).
+## 技术细节
+- 数据库结构大概率不用新增表：当前朋友评价表本身已经是一条一条独立存储，核心问题在“读取时只取最后一条”。
+- 如果现有页面或查询强依赖 `friendReview` 单对象，我会改成：
+  - `friendReviews: []`
+  - `selectedReview`（按 `reviewId` 选中的单条）
+- 朋友端提交后跳转链路会变成：
+  - `/review/quiz?testId=...`
+  - 提交后拿到 `reviewId`
+  - 跳到 `/review/done?testId=...&reviewId=...`
+- 用户端查看某位朋友的单独对照：
+  - `/result?testId=...&reviewId=...`
+- `/compare` 作为兼容入口，会接受同样的参数并展示同样的单条对照内容。
 
-Two tables:
-
-- `tests` — `id (uuid)`, `self_scores (jsonb)`, `self_result (text)`, `created_at`
-- `friend_reviews` — `id`, `test_id (fk)`, `friend_name (text, nullable)`, `friend_scores (jsonb)`, `friend_result (text)`, `submitted_at`
-
-RLS: public insert/select by `test_id` (no auth, link-based access — anyone with the testId can read/write). Service role used server-side via server functions.
-
-Server functions in `src/lib/tests.functions.ts`:
-- `createTest({ selfScores, selfResult })` → returns testId
-- `getTest({ testId })` → returns self + latest friend review
-- `submitFriendReview({ testId, friendName, friendScores, friendResult })`
-
-## Scoring Engine (`src/lib/scoring.ts`)
-
-Pure functions, fully unit-testable:
-
-- `SELF_QUESTIONS` / `FRIEND_QUESTIONS` — question banks with per-option dimension deltas (from PRD §13–14)
-- `ROLES` — 8 role definitions (id A–H, name, tagline, description, group)
-- `computeScores(answers, questions)` — sums 11 dimensions
-- `computeRole(scores, mode, answers)` — applies role formulas (§15) and tiebreak rules (§16, self vs friend differ)
-- `compareResults(selfRole, friendRole)` — returns `{ status: 'consensus' | 'slight' | 'reversal', selfRole, friendRole }` using the 4 group buckets (§18)
-
-## Components
-
-- `QuizRunner` — shared 5-question flow (props: questions, onComplete), bubble-style option cards, progress dots
-- `RoleCard` — sticker-tag role display (name, tagline, description); placeholder mascot slot ready for upcoming illustrations
-- `ShareLinkBox` — copy-to-clipboard with toast
-- `CompareCards` — side-by-side "我以为的我 / 朋友眼中的我" cards with status banner
-
-UI primitives from existing shadcn (`button`, `card`, `progress`, `input`, `sonner`).
-
-## Design System (`src/styles.css`)
-
-Add semantic tokens (oklch):
-- `--background` white
-- `--primary` rich orange (highlight, CTA)
-- `--accent` mint green (balance, secondary tag)
-- `--foreground` near-black (bold headings)
-- `--muted` light gray (helper text)
-- `--sticker-shadow` soft drop shadow for sticker-tag look
-
-Typography: bold black headings, rounded body. Mobile-first centered card layout.
-
-## Sharing
-
-- `testId` is the uuid from `tests` table
-- Self result page shows `/review?testId=...` link with copy button
-- Friend done page links back to `/compare?testId=...` (sent to original user) and offers "我也想自测"
-- Result-card screenshot: render an on-page card the user can screenshot (no canvas export in MVP)
-
-## Out of Scope (MVP)
-
-Auth, multi-friend aggregation, generated share-image export, mascot illustrations (placeholders only until user provides assets).
-
-## Technical Notes
-
-- TanStack Start + TanStack Query for `getTest` polling on the compare page (so user sees friend review when it arrives)
-- All copy in Simplified Chinese per PRD
-- Friend review answers stored server-side; comparison computed client-side from returned scores
-- `/compare` shows "等待朋友评价中…" state until a `friend_reviews` row exists
+## 交付结果
+完成后，你会得到：
+- 一个自测结果对应多个朋友评价
+- 用户结果页里的朋友评价列表
+- 每位朋友的独立对照结果页
+- 朋友提交后立即看到自己和 TA 的对照
+- 8 个角色形象接入到结果页与列表卡片中

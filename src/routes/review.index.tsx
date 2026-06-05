@@ -51,8 +51,12 @@ function ReviewIntro() {
           </p>
           <button
             onClick={() => {
-              if (typeof window !== "undefined" && name.trim()) {
-                sessionStorage.setItem(`friendName:${testId}`, name.trim());
+              if (typeof window !== "undefined") {
+                if (name.trim()) {
+                  sessionStorage.setItem(`friendName:${testId}`, name.trim());
+                } else {
+                  sessionStorage.removeItem(`friendName:${testId}`);
+                }
               }
               navigate({ to: "/review/quiz", search: { testId } });
             }}

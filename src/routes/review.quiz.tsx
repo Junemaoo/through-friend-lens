@@ -34,7 +34,7 @@ function ReviewQuiz() {
         typeof window !== "undefined"
           ? sessionStorage.getItem(`friendName:${testId}`)
           : null;
-      await submit({
+      const response = await submit({
         data: {
           testId,
           friendName,
@@ -42,7 +42,10 @@ function ReviewQuiz() {
           friendResult: result,
         },
       });
-      navigate({ to: "/review/done", search: { testId, result } });
+      navigate({
+        to: "/review/done",
+        search: { testId, reviewId: response.reviewId },
+      });
     } catch (e) {
       console.error(e);
       toast.error("提交失败，再试一次");
