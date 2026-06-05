@@ -9,19 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ResultRouteImport } from './routes/result'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReviewIndexRouteImport } from './routes/review.index'
 import { Route as ReviewQuizRouteImport } from './routes/review.quiz'
 import { Route as ReviewDoneRouteImport } from './routes/review.done'
 
-const ReviewRoute = ReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResultRoute = ResultRouteImport.update({
   id: '/result',
   path: '/result',
@@ -42,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewIndexRoute = ReviewIndexRouteImport.update({
+  id: '/review/',
+  path: '/review/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewQuizRoute = ReviewQuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
@@ -58,18 +58,18 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/quiz': typeof QuizRoute
   '/result': typeof ResultRoute
-  '/review': typeof ReviewRouteWithChildren
   '/review/done': typeof ReviewDoneRoute
   '/review/quiz': typeof ReviewQuizRoute
+  '/review/': typeof ReviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/compare': typeof CompareRoute
   '/quiz': typeof QuizRoute
   '/result': typeof ResultRoute
-  '/review': typeof ReviewRouteWithChildren
   '/review/done': typeof ReviewDoneRoute
   '/review/quiz': typeof ReviewQuizRoute
+  '/review': typeof ReviewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +77,9 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/quiz': typeof QuizRoute
   '/result': typeof ResultRoute
-  '/review': typeof ReviewRouteWithChildren
   '/review/done': typeof ReviewDoneRoute
   '/review/quiz': typeof ReviewQuizRoute
+  '/review/': typeof ReviewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,27 +88,27 @@ export interface FileRouteTypes {
     | '/compare'
     | '/quiz'
     | '/result'
-    | '/review'
     | '/review/done'
     | '/review/quiz'
+    | '/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/compare'
     | '/quiz'
     | '/result'
-    | '/review'
     | '/review/done'
     | '/review/quiz'
+    | '/review'
   id:
     | '__root__'
     | '/'
     | '/compare'
     | '/quiz'
     | '/result'
-    | '/review'
     | '/review/done'
     | '/review/quiz'
+    | '/review/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,18 +116,11 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   QuizRoute: typeof QuizRoute
   ResultRoute: typeof ResultRoute
-  ReviewRoute: typeof ReviewRouteWithChildren
+  ReviewIndexRoute: typeof ReviewIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/review': {
-      id: '/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof ReviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/result': {
       id: '/result'
       path: '/result'
@@ -156,6 +149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/': {
+      id: '/review/'
+      path: '/review'
+      fullPath: '/review/'
+      preLoaderRoute: typeof ReviewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review/quiz': {
       id: '/review/quiz'
       path: '/quiz'
@@ -173,26 +173,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ReviewRouteChildren {
-  ReviewDoneRoute: typeof ReviewDoneRoute
-  ReviewQuizRoute: typeof ReviewQuizRoute
-}
-
-const ReviewRouteChildren: ReviewRouteChildren = {
-  ReviewDoneRoute: ReviewDoneRoute,
-  ReviewQuizRoute: ReviewQuizRoute,
-}
-
-const ReviewRouteWithChildren =
-  ReviewRoute._addFileChildren(ReviewRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CompareRoute: CompareRoute,
   QuizRoute: QuizRoute,
   ResultRoute: ResultRoute,
-  ReviewRoute: ReviewRouteWithChildren,
+  ReviewIndexRoute: ReviewIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

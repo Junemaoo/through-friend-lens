@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const searchSchema = z.object({ testId: z.string().uuid() });
 
-export const Route = createFileRoute("/review")({
+export const Route = createFileRoute("/review/")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
