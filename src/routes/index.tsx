@@ -46,10 +46,10 @@ function Home() {
         </Link>
 
         <p className="text-xs text-muted-foreground mt-4 max-w-sm whitespace-pre-line">
-          灵感来自于「乔哈里窗」：
-          我们对自己的理解，和别人眼中的我们，
-          常常并不完全重合。
-          娱乐测试，结果仅供参考
+          灵感来自于「乔哈里窗」：&nbsp;
+          {"\n"}我们对自己的理解，和别人眼中的我们，&nbsp;
+          {"\n"}常常并不完全重合。&nbsp;
+          {"\n"}娱乐测试，结果仅供参考
         </p>
       </div>
     </main>
