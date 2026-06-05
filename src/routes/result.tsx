@@ -3,12 +3,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { FriendReviewCard } from "@/components/FriendReviewCard";
 import { RoleCard } from "@/components/RoleCard";
 import { ShareLinkBox } from "@/components/ShareLinkBox";
+import { SingleComparisonView } from "@/components/SingleComparisonView";
 import { ROLES, type RoleId } from "@/lib/roles";
 import { getTest } from "@/lib/tests.functions";
 
-const searchSchema = z.object({ testId: z.string().uuid() });
+const searchSchema = z.object({
+  testId: z.string().uuid(),
+  reviewId: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/result")({
   validateSearch: (s) => searchSchema.parse(s),
@@ -22,23 +27,21 @@ export const Route = createFileRoute("/result")({
 });
 
 function ResultPage() {
-  const { testId } = Route.useSearch();
+  const { testId, reviewId } = Route.useSearch();
   const navigate = useNavigate();
   const fetchTest = useServerFn(getTest);
   const [shareUrl, setShareUrl] = useState("");
-  const [compareUrl, setCompareUrl] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setShareUrl(`${window.location.origin}/review?testId=${testId}`);
-      setCompareUrl(`${window.location.origin}/compare?testId=${testId}`);
     }
   }, [testId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["test", testId],
-    queryFn: () => fetchTest({ data: { testId } }),
-    refetchInterval: 5000,
+    queryKey: ["test", testId, reviewId],
+    queryFn: () => fetchTest({ data: { testId, reviewId } }),
+    refetchInterval: reviewId ? false : 5000,
   });
 
   if (isLoading) {
@@ -53,46 +56,81 @@ function ResultPage() {
     );
   }
 
-  const role = ROLES[data.test.self_result as RoleId];
-  const hasFriendReview = !!data.friendReview;
+  const selfRoleId = data.test.self_result as RoleId;
+  const role = ROLES[selfRoleId];
+  const hasFriendReviews = data.friendReviews.length > 0;
+
+  if (reviewId) {
+    if (!data.selectedReview) {
+      return (
+        <div className="p-12 text-center">
+          <p className="mb-4">没找到这位朋友的评价。</p>
+          <Link to="/result" search={{ testId }} className="btn-pop">返回朋友视角列表</Link>
+        </div>
+      );
+    }
+
+    return (
+      <SingleComparisonView
+        testId={testId}
+        selfRoleId={selfRoleId}
+        review={data.selectedReview}
+        onInviteMore={() => navigate({ to: "/result", search: { testId } })}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen px-4 py-8">
-      <div className="max-w-xl mx-auto flex flex-col gap-6">
+      <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        {hasFriendReviews ? (
+          <section className="card-pop p-6 text-center" style={{ background: "var(--secondary)" }}>
+            <h1 className="text-3xl font-black">朋友视角已送达</h1>
+            <p className="mt-2 text-foreground/70">每一张卡，都是一个朋友看见的你。</p>
+            <p className="mt-4 text-sm font-semibold">已收到 {data.friendReviews.length} 位朋友评价</p>
+          </section>
+        ) : null}
+
         <div className="text-center">
-          <span className="sticker mb-4">你以为你是</span>
-          <h1 className="text-3xl font-black mt-3">{role.name}</h1>
+          <span className="sticker mb-4">你以为你是：{role.name}</span>
         </div>
 
         <RoleCard role={role} />
 
         <div className="card-pop p-5 flex flex-col gap-3" style={{ background: "var(--accent)" }}>
-          <h2 className="text-lg font-extrabold text-accent-foreground">
-            想知道朋友怎么看你？
-          </h2>
+          <h2 className="text-lg font-extrabold text-accent-foreground">邀请朋友评价我</h2>
           <p className="text-sm text-accent-foreground/80">
-            把下面的链接发给一位朋友，让 TA 从外部视角评价你。
+            把链接发给一个朋友，看看 TA 眼里的你是不是同一个版本。
           </p>
-          <ShareLinkBox url={shareUrl} />
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <Link to="/review" search={{ testId }} className="btn-pop btn-ghost justify-center">
+              邀请朋友评价我
+            </Link>
+            <div className="flex-1">
+              <ShareLinkBox url={shareUrl} />
+            </div>
+          </div>
         </div>
 
-        <div className="card-pop p-5 flex flex-col gap-3">
-          <h2 className="text-lg font-extrabold">
-            {hasFriendReview ? "朋友已经评价啦 🎉" : "等待朋友评价中..."}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {hasFriendReview
-              ? "去看看你和朋友眼中的你是不是同一个版本。"
-              : "朋友提交评价后，这里会出现对照结果入口。这个页面会自动刷新。"}
-          </p>
-          <button
-            disabled={!hasFriendReview}
-            onClick={() => navigate({ to: "/compare", search: { testId } })}
-            className="btn-pop self-start"
-          >
-            查看对照结果 →
-          </button>
-        </div>
+        {!hasFriendReviews ? (
+          <div className="card-pop p-5 flex flex-col gap-3">
+            <h2 className="text-lg font-extrabold">等待朋友评价中...</h2>
+            <p className="text-sm text-muted-foreground">
+              朋友提交评价后，这里会出现朋友视角列表。这个页面会自动刷新。
+            </p>
+          </div>
+        ) : (
+          <section className="flex flex-col gap-4">
+            {data.friendReviews.map((review) => (
+              <FriendReviewCard
+                key={review.id}
+                testId={testId}
+                selfRoleId={selfRoleId}
+                review={review}
+              />
+            ))}
+          </section>
+        )}
 
         <Link to="/" className="text-center text-sm text-muted-foreground underline">
           回首页
@@ -101,3 +139,4 @@ function ResultPage() {
     </main>
   );
 }
+
