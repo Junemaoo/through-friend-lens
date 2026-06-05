@@ -29,7 +29,12 @@ export const createTest = createServerFn({ method: "POST" })
   });
 
 export const getTest = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ testId: z.string().uuid() }))
+  .inputValidator(
+    z.object({
+      testId: z.string().uuid(),
+      reviewId: z.string().uuid().optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
@@ -40,19 +45,26 @@ export const getTest = createServerFn({ method: "GET" })
       .eq("id", data.testId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!test) return { test: null, friendReview: null };
+    if (!test) {
+      return { test: null, friendReviews: [], selectedReview: null };
+    }
 
     const { data: reviews, error: rerr } = await supabaseAdmin
       .from("friend_reviews")
       .select("id, friend_name, friend_scores, friend_result, submitted_at")
       .eq("test_id", data.testId)
-      .order("submitted_at", { ascending: false })
-      .limit(1);
+      .order("submitted_at", { ascending: false });
     if (rerr) throw new Error(rerr.message);
+
+    const friendReviews = reviews ?? [];
+    const selectedReview = data.reviewId
+      ? friendReviews.find((review) => review.id === data.reviewId) ?? null
+      : null;
 
     return {
       test,
-      friendReview: reviews?.[0] ?? null,
+      friendReviews,
+      selectedReview,
     };
   });
 
@@ -69,12 +81,17 @@ export const submitFriendReview = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
-    const { error } = await supabaseAdmin.from("friend_reviews").insert({
-      test_id: data.testId,
-      friend_name: data.friendName?.trim() || null,
-      friend_scores: data.friendScores,
-      friend_result: data.friendResult,
-    });
+    const { data: row, error } = await supabaseAdmin
+      .from("friend_reviews")
+      .insert({
+        test_id: data.testId,
+        friend_name: data.friendName?.trim() || null,
+        friend_scores: data.friendScores,
+        friend_result: data.friendResult,
+      })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, reviewId: row.id as string };
   });
+
