@@ -11,7 +11,7 @@ import { ROLES, type RoleId } from "@/lib/roles";
 import { getTest } from "@/lib/tests.functions";
 
 const searchSchema = z.object({
-  testId: z.string().uuid(),
+  testId: z.string().uuid().optional(),
   reviewId: z.string().uuid().optional(),
 });
 
@@ -32,16 +32,29 @@ function ResultPage() {
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && testId) {
       setShareUrl(`${window.location.origin}/review?testId=${testId}`);
     }
   }, [testId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["test", testId, reviewId],
-    queryFn: () => fetchTest({ data: { testId, reviewId } }),
+    queryFn: () =>
+      testId
+        ? fetchTest({ data: { testId, reviewId } })
+        : Promise.resolve({ test: null, friendReviews: [], selectedReview: null }),
     refetchInterval: reviewId ? false : 5000,
+    enabled: Boolean(testId),
   });
+
+  if (!testId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">没找到这次测试。</p>
+        <Link to="/" className="btn-pop">回首页</Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
