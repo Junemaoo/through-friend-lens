@@ -7,12 +7,15 @@ import { type RoleId } from "@/lib/roles";
 import { getTest } from "@/lib/tests.functions";
 
 const searchSchema = z.object({
-  testId: z.string().uuid(),
+  testId: z.string().uuid().optional(),
   reviewId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/compare")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({
     meta: [
       { title: "对照结果 - 你以为的你 vs 朋友眼中的你" },
@@ -28,9 +31,19 @@ function ComparePage() {
   const fetchTest = useServerFn(getTest);
   const { data, isLoading } = useQuery({
     queryKey: ["compare", testId, reviewId],
-    queryFn: () => fetchTest({ data: { testId, reviewId } }),
+    queryFn: () => fetchTest({ data: { testId: testId!, reviewId } }),
     refetchInterval: reviewId ? false : 4000,
+    enabled: Boolean(testId),
   });
+
+  if (!testId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">没找到这次测试。</p>
+        <Link to="/" className="btn-pop">回首页</Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-12 text-center text-muted-foreground">加载中...</div>;

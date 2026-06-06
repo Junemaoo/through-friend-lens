@@ -11,12 +11,15 @@ import { ROLES, type RoleId } from "@/lib/roles";
 import { getTest } from "@/lib/tests.functions";
 
 const searchSchema = z.object({
-  testId: z.string().uuid(),
+  testId: z.string().uuid().optional(),
   reviewId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/result")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({
     meta: [
       { title: "我的自测角色" },
@@ -32,16 +35,26 @@ function ResultPage() {
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && testId) {
       setShareUrl(`${window.location.origin}/review?testId=${testId}`);
     }
   }, [testId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["test", testId, reviewId],
-    queryFn: () => fetchTest({ data: { testId, reviewId } }),
+    queryFn: () => fetchTest({ data: { testId: testId!, reviewId } }),
     refetchInterval: reviewId ? false : 5000,
+    enabled: Boolean(testId),
   });
+
+  if (!testId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">没找到这次测试。</p>
+        <Link to="/" className="btn-pop">回首页</Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
