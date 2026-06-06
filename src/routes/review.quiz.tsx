@@ -8,7 +8,7 @@ import { FRIEND_QUESTIONS } from "@/lib/questions";
 import { computeRole, computeScores, type Answers } from "@/lib/scoring";
 import { submitFriendReview } from "@/lib/tests.functions";
 
-const searchSchema = z.object({ testId: z.string().uuid() });
+const searchSchema = z.object({ testId: z.string().uuid().optional() });
 
 export const Route = createFileRoute("/review/quiz")({
   validateSearch: (s) => searchSchema.parse(s),
@@ -23,6 +23,17 @@ function ReviewQuiz() {
   const navigate = useNavigate();
   const submit = useServerFn(submitFriendReview);
   const [submitting, setSubmitting] = useState(false);
+
+  if (!testId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">这个评价链接不完整。</p>
+        <button onClick={() => navigate({ to: "/" })} className="btn-pop">
+          回首页
+        </button>
+      </div>
+    );
+  }
 
   const handleComplete = async (answers: Answers) => {
     if (submitting) return;
