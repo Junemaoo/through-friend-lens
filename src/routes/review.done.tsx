@@ -8,8 +8,8 @@ import { ROLES, type RoleId } from "@/lib/roles";
 import { getTest } from "@/lib/tests.functions";
 
 const searchSchema = z.object({
-  testId: z.string().uuid(),
-  reviewId: z.string().uuid(),
+  testId: z.string().uuid().optional(),
+  reviewId: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/review/done")({
@@ -23,8 +23,18 @@ function ReviewDone() {
   const fetchTest = useServerFn(getTest);
   const { data, isLoading } = useQuery({
     queryKey: ["review-done", testId, reviewId],
-    queryFn: () => fetchTest({ data: { testId, reviewId } }),
+    queryFn: () => fetchTest({ data: { testId: testId!, reviewId } }),
+    enabled: Boolean(testId && reviewId),
   });
+
+  if (!testId || !reviewId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">这份朋友评价不存在了。</p>
+        <Link to="/" className="btn-pop">回首页</Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-12 text-center text-muted-foreground">加载中...</div>;
