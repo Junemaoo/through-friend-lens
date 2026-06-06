@@ -13,7 +13,10 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/review/done")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({ meta: [{ title: "你眼中的 TA 已送达" }] }),
   component: ReviewDone,
 });

@@ -11,7 +11,10 @@ import { submitFriendReview } from "@/lib/tests.functions";
 const searchSchema = z.object({ testId: z.string().uuid().optional() });
 
 export const Route = createFileRoute("/review/quiz")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({
     meta: [{ title: "朋友评价 · 答题中" }],
   }),

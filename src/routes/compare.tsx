@@ -12,7 +12,10 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/compare")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({
     meta: [
       { title: "对照结果 - 你以为的你 vs 朋友眼中的你" },

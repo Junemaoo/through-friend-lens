@@ -16,7 +16,10 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/result")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => {
+    const parsed = searchSchema.safeParse(s);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => ({
     meta: [
       { title: "我的自测角色" },
