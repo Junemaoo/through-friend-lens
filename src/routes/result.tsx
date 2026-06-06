@@ -39,10 +39,7 @@ function ResultPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["test", testId, reviewId],
-    queryFn: () =>
-      testId
-        ? fetchTest({ data: { testId, reviewId } })
-        : Promise.resolve({ test: null, friendReviews: [], selectedReview: null }),
+    queryFn: () => fetchTest({ data: { testId: testId!, reviewId } }),
     refetchInterval: reviewId ? false : 5000,
     enabled: Boolean(testId),
   });
