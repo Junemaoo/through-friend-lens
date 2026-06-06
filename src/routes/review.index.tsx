@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-const searchSchema = z.object({ testId: z.string().uuid() });
+const searchSchema = z.object({ testId: z.string().uuid().optional() });
 
 export const Route = createFileRoute("/review/")({
   validateSearch: (s) => searchSchema.parse(s),
@@ -19,6 +19,15 @@ function ReviewIntro() {
   const { testId } = Route.useSearch();
   const navigate = useNavigate();
   const [name, setName] = useState("");
+
+  if (!testId) {
+    return (
+      <div className="p-12 text-center">
+        <p className="mb-4">这个评价链接不完整。</p>
+        <Link to="/" className="btn-pop">我也想测测自己</Link>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen px-4 py-12 flex flex-col items-center">
